@@ -4,10 +4,7 @@ function Grid( {value, onGridClick} ) {
   return  <button className="grid" onClick={onGridClick}>{value}</button>
 }
 
-export default function Board() {
-  const [isXNext, setIsXNext] = useState(true)
-  const [grid, setGrid] = useState(Array(9).fill(null))
-
+function Board({isXNext, grid, onPlay}) {
   function handleClick(i) {
 
     if (grid[i] !== null || calculateWinner(grid)) {
@@ -25,8 +22,7 @@ export default function Board() {
       copyOfGrid[i] = "O"
     }
 
-    setGrid(copyOfGrid);
-    setIsXNext(!isXNext) // flip the boolean
+    onPlay(copyOfGrid);
 
   }
 
@@ -60,6 +56,47 @@ export default function Board() {
     </>
   );
 }
+
+export default function Game() {
+  const [history, setHistory] = useState([(Array(9).fill(null))])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const isXNext = currentIndex % 2 === 0;
+
+  const currentGrid = history[currentIndex]; // Board state of the last move
+
+  function handlePlay(copyOfGrid) {    
+    const nextHistory = [...history.slice(0, currentIndex + 1), copyOfGrid];
+    setHistory(nextHistory);
+    setCurrentIndex(nextHistory.length - 1);
+  }
+
+  function jumpTo(nextIndex) {
+    setCurrentIndex(nextIndex);
+  }
+
+  const moves = history.map((grid, index) => {
+    let description;
+    if (index > 0) {
+      description = `Go to move #${index}`;
+    } else {
+      description = `Go back to the game's initial state`
+    }
+    return (
+      <li key={index}>
+        <button onClick={() => jumpTo(index)}>{description}</button>
+      </li>
+    )
+  })
+
+
+  return (
+    <div className="game">
+      <div className="game-board"> <Board isXNext={isXNext} grid={currentGrid} onPlay={handlePlay}/></div>
+      <div className="game-info">{moves}</div>
+    </div>
+  )
+}
+
 
 function calculateWinner(grid) {
   // Winning combinations of indexes on the board
