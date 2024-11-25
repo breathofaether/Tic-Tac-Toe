@@ -6,7 +6,6 @@ function Grid({ value, onGridClick }) {
 
 function Board({ isXNext, grid, onPlay }) {
   function handleClick(i) {
-
     if (grid[i] !== null || calculateWinner(grid)) {
       console.log(grid[i] !== null ? 'Cell is already filled!' : 'Winner already determined');
       return
@@ -35,24 +34,31 @@ function Board({ isXNext, grid, onPlay }) {
     status = "Current player: " + (isXNext ? "X" : "O")
   }
 
+  const board = Array(3).fill(null).map((_, row) => {
+    const startIndexOfRow = row * 3; // Calculates the start index for each row: 
+    // For row 0: 0 * 3 = 0, For row 1: 1 * 3 = 3, For row 2: 2 * 3 = 6
+    const rowCells = grid.slice(startIndexOfRow, startIndexOfRow + 3); // Extracts a portion of the grid (3 cells per row):
+    // For row 0: slice(0, 3), For row 1: slice(3, 6), For row 2: slice(6, 9)
+    return (
+      <div key={row} className="board-row">
+        {rowCells.map((cellValue, col) => { // Iterates over the cells in the current row.
+          // `value` represents the current cell value (either X, O, or null)
+          // `col` is the index within the row (0, 1, or 2)
+          const indexOfCurrentCell = startIndexOfRow + col; // Calculate the index for the current cell:
+          // For column 0: index = startIndexOfRow + 0, For column 1: index = startIndexOfRow + 1, etc.
+          return (
+            <Grid key={indexOfCurrentCell} value={cellValue} onGridClick={() => handleClick(indexOfCurrentCell)} />
+          );
+        })}
+      </div>
+    );
+  });
+
+
   return (
     <>
       <div className="status">{status}</div>
-      <div className="board-row">
-        <Grid value={grid[0]} onGridClick={() => handleClick(0)} />
-        <Grid value={grid[1]} onGridClick={() => handleClick(1)} />
-        <Grid value={grid[2]} onGridClick={() => handleClick(2)} />
-      </div>
-      <div className="board-row">
-        <Grid value={grid[3]} onGridClick={() => handleClick(3)} />
-        <Grid value={grid[4]} onGridClick={() => handleClick(4)} />
-        <Grid value={grid[5]} onGridClick={() => handleClick(5)} />
-      </div>
-      <div className="board-row">
-        <Grid value={grid[6]} onGridClick={() => handleClick(6)} />
-        <Grid value={grid[7]} onGridClick={() => handleClick(7)} />
-        <Grid value={grid[8]} onGridClick={() => handleClick(8)} />
-      </div>
+      <div className="board-row">{board}</div>
     </>
   );
 }
@@ -74,29 +80,30 @@ export default function Game() {
     setCurrentIndex(nextIndex);
   }
 
-  const moves = history.map((grid, index) => {
+  const moves = history.map((_, index) => {
     let description;
-    if (index > 0) {
+
+    if (index === currentIndex) {
+      description = `You are at move #${index}`
+    } else if (index > 0) {
       description = `Go to move #${index}`;
     } else {
       description = `Go back to the game's initial state`
     }
+
     return (
       <li key={index}>
-        <button onClick={() => jumpTo(index)}>{description}</button>
+        {index === currentIndex ? (
+          <span>{description}</span>
+        ) : (<button onClick={() => jumpTo(index)}>{description}</button>)}
       </li>
     )
   })
 
-  const currentMoveDescription = currentIndex > 0 ? `You are at move #${currentIndex + 1}`
-    : "You are at the game's initial state"
-
-
   return (
     <div className="game">
-      <div className="game-board"> 
-      <Board isXNext={isXNext} grid={currentGrid} onPlay={handlePlay} />
-      <div className="current-move">{currentMoveDescription}</div>
+      <div className="game-board">
+        <Board isXNext={isXNext} grid={currentGrid} onPlay={handlePlay} />
       </div>
       <div className="game-info">{moves}</div>
     </div>
