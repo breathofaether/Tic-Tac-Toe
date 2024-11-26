@@ -94,3 +94,9 @@ body {
 .game-info {
   margin-bottom: 10px;
 }
+
+.highlight {
+  background-color: red;
+  color: white;  
+  font-weight: bold;
+}

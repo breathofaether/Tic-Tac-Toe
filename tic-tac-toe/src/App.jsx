@@ -1,14 +1,15 @@
 import { useState } from "react";
 
-function Grid({ value, onGridClick }) {
-  return <button className="grid" onClick={onGridClick}>{value}</button>
+function Grid({ value, onGridClick, isWinningSquare }) {
+  return <button className={`grid ${isWinningSquare ? 'highlight' : ''}`} onClick={onGridClick}>{value}</button>
 }
 
 function Board({ isXNext, grid, onPlay }) {
   function handleClick(i) {
-    if (grid[i] !== null || calculateWinner(grid)) {
+    const winner = calculateWinner(grid)
+    if (grid[i] !== null || winner.winner) {
       console.log(grid[i] !== null ? 'Cell is already filled!' : 'Winner already determined');
-      return
+      return;
     }
 
     const copyOfGrid = grid.slice()
@@ -25,11 +26,13 @@ function Board({ isXNext, grid, onPlay }) {
 
   }
 
-  const winner = calculateWinner(grid);
+  const { winner, line } = calculateWinner(grid); // to get both winner and the winning line
   let status;
 
   if (winner) {
     status = "Winner: " + winner;
+  } else if (grid.every(cell => cell !== null)) {
+    status = "It's a draw";
   } else {
     status = "Current player: " + (isXNext ? "X" : "O")
   }
@@ -46,8 +49,9 @@ function Board({ isXNext, grid, onPlay }) {
           // `col` is the index within the row (0, 1, or 2)
           const indexOfCurrentCell = startIndexOfRow + col; // Calculate the index for the current cell:
           // For column 0: index = startIndexOfRow + 0, For column 1: index = startIndexOfRow + 1, etc.
+          const isWinningSquare = line && line.includes(indexOfCurrentCell)
           return (
-            <Grid key={indexOfCurrentCell} value={cellValue} onGridClick={() => handleClick(indexOfCurrentCell)} />
+            <Grid key={indexOfCurrentCell} value={cellValue} onGridClick={() => handleClick(indexOfCurrentCell)} isWinningSquare={isWinningSquare} />
           );
         })}
       </div>
@@ -70,7 +74,7 @@ export default function Game() {
   const isXNext = currentIndex % 2 === 0;
 
   const currentGrid = history[currentIndex]; // Board state of the last move
-  const sortedHistory = history.map((grid, index) => ({grid, index}));
+  const sortedHistory = history.map((grid, index) => ({ grid, index }));
 
   sortedHistory.sort((a, b) => {
     if (sortOrder === 'ascending') {
@@ -94,7 +98,7 @@ export default function Game() {
     setCurrentIndex(nextIndex);
   }
 
-  const moves = sortedHistory.map(({_, index}) => {
+  const moves = sortedHistory.map(({ _, index }) => {
     let description;
 
     if (index === currentIndex) {
@@ -120,8 +124,8 @@ export default function Game() {
         <Board isXNext={isXNext} grid={currentGrid} onPlay={handlePlay} />
       </div>
       <div className="game-info">
-      <button onClick={toggleSortOrder}>Sort moves: {sortOrder === 'ascending' ? 'Ascending' : 'Descending'}</button>
-      {moves}
+        <button onClick={toggleSortOrder}>Sort moves: {sortOrder === 'ascending' ? 'Ascending' : 'Descending'}</button>
+        {moves}
       </div>
     </div>
   )
@@ -150,8 +154,8 @@ function calculateWinner(grid) {
 
     // Check if all three grid in this line are the same and not null
     if (isNotEmpty && (isEqualAB && isEqualAC)) {
-      return grid[a] // Return the winner ("X" or "O")
+      return { winner: grid[a], line } // Return the winner ("X" or "O")
     }
   }
-  return null; // No winner found 
+  return { winner: null, line: null }; // No winner found 
 }
