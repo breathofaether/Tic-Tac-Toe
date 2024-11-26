@@ -98,15 +98,25 @@ export default function Game() {
     setCurrentIndex(nextIndex);
   }
 
-  const moves = sortedHistory.map(({ _, index }) => {
+  const moves = sortedHistory.map(({ grid }, index) => {
+
+    let location = "";
+    if (index > 0) {
+      const previousGrid = sortedHistory[index - 1].grid;
+      const moveIndex = grid.findIndex((value, i) => value !== previousGrid[i]);
+      const row = Math.floor(moveIndex / 3);
+      const col = (moveIndex % 3);
+      location = `(${row}, ${col})`;
+    }
+
     let description;
 
     if (index === currentIndex) {
       description = `You are at move #${index}`
     } else if (index > 0) {
-      description = `Go to move #${index}`;
+      description = `Go to move #${index})`;
     } else {
-      description = `Go back to the game's initial state`
+      description = `reset`
     }
 
     return (
