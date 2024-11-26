@@ -66,9 +66,23 @@ function Board({ isXNext, grid, onPlay }) {
 export default function Game() {
   const [history, setHistory] = useState([(Array(9).fill(null))])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [sortOrder, setSortOrder] = useState('ascending')
   const isXNext = currentIndex % 2 === 0;
 
   const currentGrid = history[currentIndex]; // Board state of the last move
+  const sortedHistory = history.map((grid, index) => ({grid, index}));
+
+  sortedHistory.sort((a, b) => {
+    if (sortOrder === 'ascending') {
+      return a.index - b.index;
+    } else {
+      return b.index - a.index;
+    }
+  });
+
+  function toggleSortOrder() {
+    setSortOrder(sortOrder === 'ascending' ? 'descending' : 'ascending');
+  }
 
   function handlePlay(copyOfGrid) {
     const nextHistory = [...history.slice(0, currentIndex + 1), copyOfGrid];
@@ -80,7 +94,7 @@ export default function Game() {
     setCurrentIndex(nextIndex);
   }
 
-  const moves = history.map((_, index) => {
+  const moves = sortedHistory.map(({_, index}) => {
     let description;
 
     if (index === currentIndex) {
@@ -105,7 +119,10 @@ export default function Game() {
       <div className="game-board">
         <Board isXNext={isXNext} grid={currentGrid} onPlay={handlePlay} />
       </div>
-      <div className="game-info">{moves}</div>
+      <div className="game-info">
+      <button onClick={toggleSortOrder}>Sort moves: {sortOrder === 'ascending' ? 'Ascending' : 'Descending'}</button>
+      {moves}
+      </div>
     </div>
   )
 }
